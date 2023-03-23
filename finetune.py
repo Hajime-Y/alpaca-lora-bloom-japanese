@@ -10,7 +10,8 @@ import transformers
 assert (
     "LlamaTokenizer" in transformers._import_structure["models.llama"]
 ), "LLaMA is now in HuggingFace's main branch.\nPlease reinstall it: pip uninstall transformers && pip install git+https://github.com/huggingface/transformers.git"
-from transformers import LlamaForCausalLM, LlamaTokenizer
+# from transformers import LlamaForCausalLM, LlamaTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM  # 変更（Llama -> Bloom）
 from peft import (
     prepare_model_for_int8_training,
     LoraConfig,
@@ -30,16 +31,18 @@ LORA_R = 8
 LORA_ALPHA = 16
 LORA_DROPOUT = 0.05
 VAL_SET_SIZE = 2000
-TARGET_MODULES = [
-    "q_proj",
-    "v_proj",
-]
-DATA_PATH = "alpaca_data_cleaned.json"
+# TARGET_MODULES = [
+#     "q_proj",
+#     "v_proj",
+# ]
+TARGET_MODULES = ["query_key_value"]  # 変更（Llama -> Bloom）
+# DATA_PATH = "alpaca_data_cleaned.json"
+DATA_PATH = "alpaca_data_japanese_10.json"  # 変更（Llama -> Bloom）
 OUTPUT_DIR = "lora-alpaca"
-BASE_MODEL = None
-assert (
-    BASE_MODEL
-), "Please specify a BASE_MODEL in the script, e.g. 'decapoda-research/llama-7b-hf'"
+# BASE_MODEL = None
+# assert (
+#     BASE_MODEL
+# ), "Please specify a BASE_MODEL in the script, e.g. 'decapoda-research/llama-7b-hf'"
 
 device_map = "auto"
 world_size = int(os.environ.get("WORLD_SIZE", 1))
@@ -48,12 +51,20 @@ if ddp:
     device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
     GRADIENT_ACCUMULATION_STEPS = GRADIENT_ACCUMULATION_STEPS // world_size
 
-model = LlamaForCausalLM.from_pretrained(
-    BASE_MODEL,
+# model = LlamaForCausalLM.from_pretrained(
+#     BASE_MODEL,
+#     load_in_8bit=True,
+#     device_map=device_map,
+# )
+# tokenizer = LlamaTokenizer.from_pretrained(BASE_MODEL, add_eos_token=True)
+# 変更（Llama -> Bloom対応）
+model_name = "bigscience/bloom-560m"
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
     load_in_8bit=True,
     device_map=device_map,
 )
-tokenizer = LlamaTokenizer.from_pretrained(BASE_MODEL, add_eos_token=True)
+tokenizer = AutoTokenizer.from_pretrained(model_name, add_eos_token=True)
 
 model = prepare_model_for_int8_training(model)
 
@@ -73,7 +84,7 @@ data = load_dataset("json", data_files=DATA_PATH)
 def generate_prompt(data_point):
     # sorry about the formatting disaster gotta move fast
     if data_point["input"]:
-        return f"""Below is an instruction that describes a task, paired with an input that provides further context. Write a response that appropriately completes the request.
+        return f"""以下は、タスクを説明する命令と、さらなるコンテキストを提供する入力の組み合わせです。要求を適切に満たすような応答を書きなさい。
 
 ### Instruction:
 {data_point["instruction"]}
@@ -84,7 +95,7 @@ def generate_prompt(data_point):
 ### Response:
 {data_point["output"]}"""
     else:
-        return f"""Below is an instruction that describes a task. Write a response that appropriately completes the request.
+        return f"""以下は、ある作業を記述した指示です。要求を適切に満たすような応答を書きなさい。
 
 ### Instruction:
 {data_point["instruction"]}
