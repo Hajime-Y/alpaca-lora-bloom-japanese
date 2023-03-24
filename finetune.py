@@ -30,7 +30,8 @@ CUTOFF_LEN = 256  # 256 accounts for about 96% of the data
 LORA_R = 8
 LORA_ALPHA = 16
 LORA_DROPOUT = 0.05
-VAL_SET_SIZE = 2000
+# VAL_SET_SIZE = 2000
+VAL_SET_SIZE = 20  # 変更（Llama -> Bloom）試し用
 # TARGET_MODULES = [
 #     "q_proj",
 #     "v_proj",
