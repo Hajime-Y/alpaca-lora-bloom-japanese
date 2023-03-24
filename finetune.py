@@ -37,7 +37,7 @@ VAL_SET_SIZE = 2000
 # ]
 TARGET_MODULES = ["query_key_value"]  # 変更（Llama -> Bloom）
 # DATA_PATH = "alpaca_data_cleaned.json"
-DATA_PATH = "alpaca_data_japanese_10.json"  # 変更（Llama -> Bloom）
+DATA_PATH = "alpaca_data_japanese_100.json"  # 変更（Llama -> Bloom）
 OUTPUT_DIR = "lora-alpaca"
 # BASE_MODEL = None
 # assert (
