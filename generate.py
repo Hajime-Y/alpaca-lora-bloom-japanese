@@ -7,17 +7,22 @@ import gradio as gr
 assert (
     "LlamaTokenizer" in transformers._import_structure["models.llama"]
 ), "LLaMA is now in HuggingFace's main branch.\nPlease reinstall it: pip uninstall transformers && pip install git+https://github.com/huggingface/transformers.git"
-from transformers import LlamaTokenizer, LlamaForCausalLM, GenerationConfig
+# from transformers import LlamaTokenizer, LlamaForCausalLM, GenerationConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig  # 変更（Llama -> Bloom）
 
-LOAD_8BIT = False
-BASE_MODEL = None
-LORA_WEIGHTS = "tloen/alpaca-lora-7b"
+# LOAD_8BIT = False
+# BASE_MODEL = None
+# LORA_WEIGHTS = "tloen/alpaca-lora-7b"
+LOAD_8BIT = True  # 変更（Llama -> Bloom）
+BASE_MODEL = "bigscience/bloom-560m"  # 変更（Llama -> Bloom）
+LORA_WEIGHTS = './lora-alpaca'  # 変更（Llama -> Bloom）
 
-tokenizer = LlamaTokenizer.from_pretrained(BASE_MODEL)
+# tokenizer = LlamaTokenizer.from_pretrained(BASE_MODEL)
+tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, add_eos_token=True)  # 変更（Llama -> Bloom）
 
-assert (
-    BASE_MODEL
-), "Please specify a BASE_MODEL in the script, e.g. 'decapoda-research/llama-7b-hf'"
+# assert (
+#     BASE_MODEL
+# ), "Please specify a BASE_MODEL in the script, e.g. 'decapoda-research/llama-7b-hf'"
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -31,7 +36,14 @@ except:
     pass
 
 if device == "cuda":
-    model = LlamaForCausalLM.from_pretrained(
+    # model = LlamaForCausalLM.from_pretrained(
+    #     BASE_MODEL,
+    #     load_in_8bit=LOAD_8BIT,
+    #     torch_dtype=torch.float16,
+    #     device_map="auto",
+    # )
+    # 変更（Llama -> Bloom）
+    model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
         load_in_8bit=LOAD_8BIT,
         torch_dtype=torch.float16,
@@ -43,7 +55,13 @@ if device == "cuda":
         torch_dtype=torch.float16,
     )
 elif device == "mps":
-    model = LlamaForCausalLM.from_pretrained(
+    # model = LlamaForCausalLM.from_pretrained(
+    #     BASE_MODEL,
+    #     device_map={"": device},
+    #     torch_dtype=torch.float16,
+    # )
+    # 変更（Llama -> Bloom）
+    model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL,
         device_map={"": device},
         torch_dtype=torch.float16,
@@ -55,7 +73,11 @@ elif device == "mps":
         torch_dtype=torch.float16,
     )
 else:
-    model = LlamaForCausalLM.from_pretrained(
+    # model = LlamaForCausalLM.from_pretrained(
+    #     BASE_MODEL, device_map={"": device}, low_cpu_mem_usage=True
+    # )
+    # 変更（Llama -> Bloom）
+    model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL, device_map={"": device}, low_cpu_mem_usage=True
     )
     model = PeftModel.from_pretrained(
@@ -158,7 +180,6 @@ gr.Interface(
 
 # Old testing code follows.
 
-"""
 if __name__ == "__main__":
     # testing code for readme
     for instruction in [
@@ -175,4 +196,3 @@ if __name__ == "__main__":
         print("Instruction:", instruction)
         print("Response:", evaluate(instruction))
         print()
-"""
