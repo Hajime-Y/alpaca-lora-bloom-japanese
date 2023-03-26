@@ -4,9 +4,9 @@ from peft import PeftModel
 import transformers
 import gradio as gr
 
-assert (
-    "LlamaTokenizer" in transformers._import_structure["models.llama"]
-), "LLaMA is now in HuggingFace's main branch.\nPlease reinstall it: pip uninstall transformers && pip install git+https://github.com/huggingface/transformers.git"
+# assert (
+#     "LlamaTokenizer" in transformers._import_structure["models.llama"]
+# ), "LLaMA is now in HuggingFace's main branch.\nPlease reinstall it: pip uninstall transformers && pip install git+https://github.com/huggingface/transformers.git"
 # from transformers import LlamaTokenizer, LlamaForCausalLM, GenerationConfig
 from transformers import AutoTokenizer, AutoModelForCausalLM, GenerationConfig  # 変更（Llama -> Bloom）
 
@@ -176,7 +176,7 @@ gr.Interface(
     ],
     title="🦙🌲 Alpaca-LoRA",
     description="Alpaca-LoRA is a 7B-parameter LLaMA model finetuned to follow instructions. It is trained on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset and makes use of the Huggingface LLaMA implementation. For more information, please visit [the project's website](https://github.com/tloen/alpaca-lora).",
-).launch()
+).launch(share=True)  # Google Colab確認用
 
 # Old testing code follows.
 
